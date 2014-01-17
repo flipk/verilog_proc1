@@ -1,0 +1,8 @@
+*.hex
+*.bit
+/papilio-prog
+*.d
+*.o
+/GadgetFactory-Papilio-Loader-86a6be9/Program/.deps
+/GadgetFactory-Papilio-Loader-86a6be9/Program/autom4te.cache
+*~

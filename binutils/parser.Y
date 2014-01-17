@@ -50,6 +50,7 @@ using namespace std;
 %token ST  STB              STU STBU
 %token IN OUT
 %token BR BRL BA BEQ BNE BLT BGT BLE BGE JMP JMPL MR
+%token __LAST_TOKEN
 
 %type <expression> EXPR EXPR_SERIES
 
@@ -235,7 +236,7 @@ print_tokenized_file(void)
         int c = yylex();
 
 	printf( "got token %d (%s) ", 
-		c, c <= YYMAXTOKEN ? yyname[c] : "");
+ 		c, c <= __LAST_TOKEN ? /*yyname[c]*/"crap" : "");
 
         if (c == REG) printf("reg %d", yylval.value);
         if (c == CONST) printf("const %d", yylval.value);

@@ -1,0 +1,76 @@
+
+instruction bitfields
+---------------------
+oooo ibu. yyyy xxxx  o=opcode  i=immed  b=byte  u=update  x,y=regs
+.... .l.. .... ....  l=jmp or bra with link
+
+instruction summary
+-------------------
+5432 1098 7654 3210
+0000 00.. yyyy xxxx  or   rx, ry
+0000 10.. .... xxxx  ori  rx, immed
+0000 01.. yyyy xxxx  mr   rx, ry   (rx loaded from ry)
+0001 00.. yyyy xxxx  and  rx, ry
+0001 10.. .... xxxx  andi rx, immed
+0010 00.. yyyy xxxx  xor  rx, ry
+0010 10.. .... xxxx  xori rx, immed
+0011 0b.. yyyy xxxx  add  rx, ry
+0011 1b.. .... xxxx  addi rx, immed
+0100 0b.. yyyy xxxx  sub  rx, ry
+0100 1b.. .... xxxx  subi rx, immed
+0101 0b.. yyyy xxxx  rol  rx, ry
+0101 1b.. .... xxxx  roli rx, immed
+0110 0b.. yyyy xxxx  cmp  rx, ry
+0110 1b.. .... xxxx  cmpi rx, immed
+0111 0b.. .... xxxx  neg  rx
+1000 1b.. .... xxxx  li   rx, immed
+1001 1bu. yyyy xxxx  ld   rx, immed(ry)
+1010 1bu. yyyy xxxx  st   rx, immed(ry)
+1011 10.. yyyy xxxx  in   rx, immed(ry)
+1100 10.. yyyy xxxx  out  rx, immed(ry)
+1101 00.. .... xxxx  br   rx
+1101 01.. .... xxxx  brl  rx  (return address goes in rx)
+1110 10.. .... .ccc  b    <cond>,relative (a, eq, ne, lt, gt, le, ge)
+1111 10.. .... ....  jmp  absolute
+1111 11.. .... xxxx  jmpl rx, absolute  (return address in rx)
+
+application binary interface
+----------------------------
+always use r14 for return address
+always use r15 for stack pointer
+function arguments in r0-r5
+local variables in r6-r13
+return value in r6
+caller-saves in r6-r9
+  - if a function uses these, it must save them before it
+    can call out to a child function, and restore them after
+    the child returns, assuming that the child may have
+    clobbered them.
+  - a function does not have to save them if it doesn't
+    make any child calls, or if the values don't have to be 
+    preserved across child calls.
+callee-saves in r10-r13
+  - a function must assume the parent expects these to remain
+    intact when it returns, thus if a function wishes to use
+    these, it must save them before using them and restore them
+    before returning. 
+  - useful for variables that must survive through child
+    function calls; a function may assume that all child calls
+    will preserve them.
+
+sample code
+-----------
+
+start:
+	li r15,END_OF_MEMORY
+
+function prologue:
+	 subi r15,NEEDED_STACK+4
+	 st r14,NEEDED_STACK(r15)
+	 [return address goes in NEEDED_STACK(r15)]
+	 [local vars are at +offset(r15)]
+
+function epilogue:
+	 ld r14,NEEDED_STACK(r15)
+	 addi r15,NEEDED_STACK
+	 br r14

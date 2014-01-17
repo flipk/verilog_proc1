@@ -1,0 +1,4 @@
+
+- make output bin that can be toggled by command from bootloader
+- make dropbox a pair of fifos
+- make 'rlogin' command for first core

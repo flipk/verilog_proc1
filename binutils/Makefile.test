@@ -1,0 +1,30 @@
+
+ASSEM= ./pfk_proc1_as
+
+all: bootloader.hex srectest.srec test-1.srec test-2.srec test-brrl.s test-jmpl.srec test-read4hex.srec
+
+bootloader.hex: bootloader.s
+	$(ASSEM) bootloader.s
+
+srectest.srec: srectest.s
+	$(ASSEM) srectest.s
+
+test-1.srec: test-1.s
+	$(ASSEM) test-1.s
+
+test-2.srec: test-2.s
+	$(ASSEM) test-2.s
+
+test-brrl.srec: test-brrl.s
+	$(ASSEM) test-brrl.s
+
+test-jmpl.srec: test-jmpl.s
+	$(ASSEM) test-jmpl.s
+
+test-read4hex.srec: test-read4hex.s
+	$(ASSEM) test-read4hex.s
+
+# note bootloader.bit is made by the xilinx tools from bootloader.bin
+
+clean:
+	rm -f *.bin *.hex *.list *.srec *.sym

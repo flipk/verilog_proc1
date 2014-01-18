@@ -21,8 +21,8 @@ pfk_proc1_sim_CXX = $(CXX)
 pfk_proc1_sim_LDFLAGS = -Wl,-rpath -Wl,/home/flipk/pfk/$(ARCH)/lib -L$(HOME)/pfk/$(ARCH)/lib -lpfkdll2
 pfk_proc1_sim_CXXFLAGS = -g3 -Wall
 pfk_proc1_sim_CPPFLAGS = -I$(HOME)/pfk/include/dll2
-srcdir = /home/flipk/proj/proc/src/binutils
-builddir = /home/flipk/proj/proc/src/binutils
+srcdir = /home/flipk/proj/proc/binutils
+builddir = /home/flipk/proj/proc/binutils
 
 all: xmakefile
 	+make $(MAKEJOBS) -f xmakefile pfk_proc1_as pfk_proc1_sim
@@ -34,8 +34,8 @@ xmakefile: Makefile pfk_proc1_as-parser.d pfk_proc1_as-tokenizer.d pfk_proc1_as-
 	cat pfk_proc1_as-parser.d pfk_proc1_as-tokenizer.d pfk_proc1_as-parse_actions.d pfk_proc1_as-output_file.d pfk_proc1_as-as_main.d pfk_proc1_sim-sim.d pfk_proc1_sim-sim_main.d >> xmakefile-tmp
 	mv xmakefile-tmp xmakefile
 
-Makefile: /home/flipk/proj/proc/src/binutils/Makefile.am
-	ampfk /home/flipk/proj/proc/src/binutils/Makefile.am
+Makefile: /home/flipk/proj/proc/binutils/Makefile.am
+	ampfk /home/flipk/proj/proc/binutils/Makefile.am
 	make clean
 
 pfk_proc1_as-parser.d: pfk_proc1_as-parser.cc

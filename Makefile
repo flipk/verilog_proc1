@@ -5,7 +5,7 @@ all:
 	echo nothing to do
 
 copy:
-	@cp binutils/*.hex .
+	@cp binutils/bootloader.hex .
 	@for f in *.v *.ucf *.hex ; do \
 		cmp -s $$f $(DESTDIR)/$$f || ( \
 			cp $$f $(DESTDIR)/$$f ; \

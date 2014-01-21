@@ -21,16 +21,18 @@ module clock_generator
 
    assign CLKIN_IBUFG_OUT = CLKIN_IN;
 
-   // 32,000,000 * 12 / 16 = 24,000,000 for processor clock
-   // 32,000,000 * 25 / 16 = 50,000,000 for processor clock
-   // 32,000,000 * 25 / 12 = 66,600,000 for processor clock
-   // 32,000,000 * 25 / 8 = 100,000,000 for processor clock
+   // 32,000,000 * 12 / 16 =  24,000,000 for processor clock
+   // 32,000,000 * 25 / 16 =  50,000,000 for processor clock
+   // 32,000,000 *  8 /  4 =  64,000,000 for processor clock
+   // 32,000,000 * 25 / 12 =  66,600,000 for processor clock
+   // 32,000,000 *  5 /  2 =  80,000,000 for processor clock
+   // 32,000,000 * 25 /  8 = 100,000,000 for processor clock
 
    DCM_SP
      #( .CLK_FEEDBACK("NONE"),
         .CLKDV_DIVIDE(2.0),
-        .CLKFX_DIVIDE(16), 
-        .CLKFX_MULTIPLY(12),
+        .CLKFX_DIVIDE(4), 
+        .CLKFX_MULTIPLY(8),
         .CLKIN_DIVIDE_BY_2("FALSE"), 
         .CLKIN_PERIOD(31.250), //   (1 / 32 * 1000)
         .CLKOUT_PHASE_SHIFT("NONE"), 
@@ -69,15 +71,19 @@ module clock_generator
 
    // 32,000,000 * 9 / 13 = 22,153,846
    // if you divide that by 24, you get 923076
-   // which is 0.2% off from an 8x115200=921600 baud clock for rs232.
+   // which is 0.15% off from an 8x115200=921600 baud clock for rs232.
+
+   // 32,000,000 * 7 / 27 = 8,296,296
+   // if you divide that by 9, you get 921810
+   // which is 0.02% off from an 8x115200=921600 baud clock for rs232.
 
    wire   CLKFX_RS232_DCM;
 
    DCM_SP
      #( .CLK_FEEDBACK("NONE"),
         .CLKDV_DIVIDE(2.0),
-        .CLKFX_DIVIDE(13), 
-        .CLKFX_MULTIPLY(9),
+        .CLKFX_DIVIDE(27), 
+        .CLKFX_MULTIPLY(7),
         .CLKIN_DIVIDE_BY_2("FALSE"), 
         .CLKIN_PERIOD(31.250),
         .CLKOUT_PHASE_SHIFT("NONE"), 
@@ -115,14 +121,14 @@ module clock_generator
        .CE(RS232_LOCKED_OUT) );
 
    clk_div_lots
-     #( .counterbits (8), .wholeway (192) )  // 1x clock
+     #( .counterbits (7), .wholeway (72) )  // 1x clock
    clk_div_rs232_tx
      ( .clk       (CLKRS232),
        .reset     (~RS232_LOCKED_OUT),
        .clk_out   (CLKRS232_TX_EN) );
 
    clk_div_lots
-     #( .counterbits (5), .wholeway (24) ) // 8x clock
+     #( .counterbits (4), .wholeway (9) ) // 8x clock
    clk_div_rs232_rx
      ( .clk       (CLKRS232),
        .reset     (~RS232_LOCKED_OUT),

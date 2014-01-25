@@ -33,8 +33,7 @@ helpString:
 	ascii   " P - show performance counter\r\n"
 	ascii	" L - load S-records\r\n"
 	ascii   " 2 - read dropbox from CPU 2\r\n"
-	ascii   " 0 - turn of w1a0\r\n"
-	ascii   " 1 - turn on w1a0\r\n"
+	ascii   " A - output to wing A\r\n"
 	ascii	" J - jump to S-record entry point\r\n"
 	byte	0
 
@@ -336,6 +335,12 @@ commandLoop:
 readCommand:	
 	li	r0,1
 	jmpl	r14,readChar # get a command
+
+	mr	r7,r6
+	mr	r0,r6
+	jmpl	r14,writeChar
+	mr	r6,r7
+
 	cmpbi	r6,0x56   # 'V'
 	bne	checkQuestionMark
 	li	r0,0x56
@@ -354,10 +359,8 @@ checkQuestionMark:
 	beq	jumpEntryPoint
 	cmpi	r6,0x32   # '2'
 	beq	readDropbox2
-	cmpi	r6,0x30   # '0'
-	beq	writeW1A00
-	cmpi	r6,0x31   # '1'
-	beq	writeW1A01
+	cmpi	r6,0x41   # 'A'
+	beq	writeWA
 	cmpbi	r6,13     # carriage return
 	beq	commandLoop
 	cmpbi	r6,10     # newline
@@ -369,15 +372,11 @@ printHelpMessage:
 	jmpl	r14,print
 	ba	commandLoop
 
-writeW1A00:
+writeWA:
+	li	r0,1
+	jmpl	r14,readChar
 	li	r10,w1a0out
-	li	r1,0
-	out	r1,0(r10)
-	ba	commandLoop
-writeW1A01:
-	li	r10,w1a0out
-	li	r1,1
-	out	r1,0(r10)
+	out	r6,0(r10)
 	ba	commandLoop
 readDropbox2:
 	li	r0,dropbox2String

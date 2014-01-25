@@ -8,7 +8,7 @@
                    w1a0out equ 0x56
                    start:
 0000 : 880f 1940   	li	r15,stackTop
-0004 : f800 1d5a   	jmp	loader
+0004 : f800 1d4c   	jmp	loader
                    stackTop:
                    versionString:
                    	asciiz  "\r\n\r\nPFK_PROC_1 bootloader version 0.3 "
@@ -40,433 +40,429 @@
 1a04 : 204c202d206c6f616420532d7265636f7264730d0a
                    	ascii   " 2 - read dropbox from CPU 2\r\n"
 1a19 : 2032202d20726561642064726f70626f782066726f6d2043505520320d0a
-                   	ascii   " 0 - turn of w1a0\r\n"
-1a37 : 2030202d207475726e206f6620773161300d0a
-                   	ascii   " 1 - turn on w1a0\r\n"
-1a4a : 2031202d207475726e206f6e20773161300d0a
+                   	ascii   " A - output to wing A\r\n"
+1a37 : 2041202d206f757470757420746f2077696e6720410d0a
                    	ascii	" J - jump to S-record entry point\r\n"
-1a5d : 204a202d206a756d7020746f20532d7265636f726420656e74727920706f696e740d0a
+1a4e : 204a202d206a756d7020746f20532d7265636f726420656e74727920706f696e740d0a
                    	byte	0
-1a80 : 00
+1a71 : 00
                    dropbox2String:
                    	asciiz  "2\r\nDropbox 2: "
-1a81 : 320d0a44726f70626f7820323a2000
+1a72 : 320d0a44726f70626f7820323a2000
                    entryPoint:
-1a90 : ffff        	word	0xFFFF
+1a81 : 00ff        	word	0xFFFF
                    print:	globl	# void print(char *str)
-1a92 : 480f 0004   	subi	r15,4           # stack space for r10, retaddr
-1a96 : a8fa 0000   	st	r10,0(r15)
-1a9a : a8fe 0002   	st	r14,2(r15)
-1a9e : 040a        	mr	r10,r0
+1a84 : 480f 0004   	subi	r15,4           # stack space for r10, retaddr
+1a88 : a8fa 0000   	st	r10,0(r15)
+1a8c : a8fe 0002   	st	r14,2(r15)
+1a90 : 040a        	mr	r10,r0
                    printNextChar:	
-1aa0 : 9ca0 0000   	ldb	r0,0(r10)  # get next print byte
-1aa4 : 380a 0001   	addi	r10,1
-1aa8 : 6800 0000   	cmpi	r0,0       # check for nul
-1aac : e801 0008   	beq	printDone  # if nul, return
-1ab0 : fc0e 1ac6   	jmpl	r14,writeChar  # output one char
-1ab4 : e800 ffe8   	ba	printNextChar      # go round for next char
+1a92 : 9ca0 0000   	ldb	r0,0(r10)  # get next print byte
+1a96 : 380a 0001   	addi	r10,1
+1a9a : 6800 0000   	cmpi	r0,0       # check for nul
+1a9e : e801 0008   	beq	printDone  # if nul, return
+1aa2 : fc0e 1ab8   	jmpl	r14,writeChar  # output one char
+1aa6 : e800 ffe8   	ba	printNextChar      # go round for next char
                    printDone:
-1ab8 : 98fa 0000   	ld	r10,0(r15)
-1abc : 98fe 0002   	ld	r14,2(r15)
-1ac0 : 380f 0004   	addi	r15,4
-1ac4 : d00e        	br	r14        # return to caller
+1aaa : 98fa 0000   	ld	r10,0(r15)
+1aae : 98fe 0002   	ld	r14,2(r15)
+1ab2 : 380f 0004   	addi	r15,4
+1ab6 : d00e        	br	r14        # return to caller
                    writeChar: globl # void writeChar(uint8_t byte)
-1ac6 : 8801 0020   	li	r1,rs232IO    # serial port addr
-1aca : b816 0001   	in	r6,1(r1)   # read tx status
-1ace : 1806 0001   	andi	r6,1       # check 'tx_busy'
-1ad2 : e802 fff0   	bne	writeChar  # if set, poll again
-1ad6 : c810 0000   	out	r0,0(r1)   # tx char
-1ada : d00e        	br	r14        # return to caller
+1ab8 : 8801 0020   	li	r1,rs232IO    # serial port addr
+1abc : b816 0001   	in	r6,1(r1)   # read tx status
+1ac0 : 1806 0001   	andi	r6,1       # check 'tx_busy'
+1ac4 : e802 fff0   	bne	writeChar  # if set, poll again
+1ac8 : c810 0000   	out	r0,0(r1)   # tx char
+1acc : d00e        	br	r14        # return to caller
                    readChar: globl # uint8_t readChar(bool wait)
-1adc : 8801 0020   	li	r1,rs232IO    # serial port addr
-1ae0 : b816 0003   	in	r6,3(r1)  # read rx status
-1ae4 : 1806 0001   	andi	r6,1      # check 'rx_ready'
-1ae8 : e802 000e   	bne	charReady # if not zero, a byte is ready
-1aec : 6800 0000   	cmpi	r0,0
-1af0 : e802 ffe8   	bne	readChar  # caller wants us to wait
-1af4 : 8806 0000   	li	r6,0
-1af8 : d00e        	br	r14       # return 0
+1ace : 8801 0020   	li	r1,rs232IO    # serial port addr
+1ad2 : b816 0003   	in	r6,3(r1)  # read rx status
+1ad6 : 1806 0001   	andi	r6,1      # check 'rx_ready'
+1ada : e802 000e   	bne	charReady # if not zero, a byte is ready
+1ade : 6800 0000   	cmpi	r0,0
+1ae2 : e802 ffe8   	bne	readChar  # caller wants us to wait
+1ae6 : 8806 0000   	li	r6,0
+1aea : d00e        	br	r14       # return 0
                    charReady:	
-1afa : b816 0002   	in	r6,2(r1)  # read 'rx_data'
-1afe : d00e        	br	r14       # return to caller
+1aec : b816 0002   	in	r6,2(r1)  # read 'rx_data'
+1af0 : d00e        	br	r14       # return to caller
                    read1HexDigit:	globl # uint16_t read1HexDigit(bool echo)
-1b00 : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
-1b04 : a8fa 0000   	st	r10,0(r15)
-1b08 : a8fe 0002   	st	r14,2(r15)
-1b0c : a8fb 0004   	st	r11,4(r15)
-1b10 : a8fc 0006   	st	r12,6(r15)
-1b14 : 040c        	mr	r12,r0   # echo flag
-1b16 : 8800 0001   	li	r0,1
-1b1a : fc0e 1adc   	jmpl	r14,readChar
-1b1e : 0460        	mr	r0,r6
-1b20 : 6c06 0030   	cmpbi	r6,0x30
-1b24 : e803 0054   	blt	badHexDigit # less than '0'
-1b28 : 6c06 0039   	cmpbi	r6,0x39
-1b2c : e805 0030   	ble	isDigit
-1b30 : 6c06 0041   	cmpbi	r6,0x41
-1b34 : e803 0044   	blt	badHexDigit # less than 'A'
-1b38 : 6c06 0046   	cmpbi	r6,0x46
-1b3c : e805 0018   	ble	isUpperAlpha
-1b40 : 6c06 0061   	cmpbi	r6,0x61
-1b44 : e803 0034   	blt	badHexDigit # less than 'a'
-1b48 : 6c06 0066   	cmpbi	r6,0x66
-1b4c : e804 002c   	bgt	badHexDigit # greater than 'f'
+1af2 : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
+1af6 : a8fa 0000   	st	r10,0(r15)
+1afa : a8fe 0002   	st	r14,2(r15)
+1afe : a8fb 0004   	st	r11,4(r15)
+1b02 : a8fc 0006   	st	r12,6(r15)
+1b06 : 040c        	mr	r12,r0   # echo flag
+1b08 : 8800 0001   	li	r0,1
+1b0c : fc0e 1ace   	jmpl	r14,readChar
+1b10 : 0460        	mr	r0,r6
+1b12 : 6c06 0030   	cmpbi	r6,0x30
+1b16 : e803 0054   	blt	badHexDigit # less than '0'
+1b1a : 6c06 0039   	cmpbi	r6,0x39
+1b1e : e805 0030   	ble	isDigit
+1b22 : 6c06 0041   	cmpbi	r6,0x41
+1b26 : e803 0044   	blt	badHexDigit # less than 'A'
+1b2a : 6c06 0046   	cmpbi	r6,0x46
+1b2e : e805 0018   	ble	isUpperAlpha
+1b32 : 6c06 0061   	cmpbi	r6,0x61
+1b36 : e803 0034   	blt	badHexDigit # less than 'a'
+1b3a : 6c06 0066   	cmpbi	r6,0x66
+1b3e : e804 002c   	bgt	badHexDigit # greater than 'f'
                    isLowerAlpha:
-1b50 : 4c06 0057   	subbi	r6,87   # turn lowercase into hex
-1b54 : e800 0010   	ba	goodHexDigit
+1b42 : 4c06 0057   	subbi	r6,87   # turn lowercase into hex
+1b46 : e800 0010   	ba	goodHexDigit
                    isUpperAlpha:
-1b58 : 4c06 0037   	subbi	r6,55   # turn uppercase into hex
-1b5c : e800 0008   	ba	goodHexDigit
+1b4a : 4c06 0037   	subbi	r6,55   # turn uppercase into hex
+1b4e : e800 0008   	ba	goodHexDigit
                    isDigit:
-1b60 : 4c06 0030   	subbi	r6,0x30 # turn digit into hex
-1b64 : e800 0000   	ba	goodHexDigit
+1b52 : 4c06 0030   	subbi	r6,0x30 # turn digit into hex
+1b56 : e800 0000   	ba	goodHexDigit
                    goodHexDigit:
-1b68 : 680c 0000   	cmpi	r12,0   # echo flag
-1b6c : e801 0010   	beq	read1HexDone
-1b70 : 046a        	mr	r10,r6
-1b72 : fc0e 1ac6   	jmpl	r14,writeChar
-1b76 : 04a6        	mr	r6,r10
-1b78 : e800 0004   	ba	read1HexDone
+1b5a : 680c 0000   	cmpi	r12,0   # echo flag
+1b5e : e801 0010   	beq	read1HexDone
+1b62 : 046a        	mr	r10,r6
+1b64 : fc0e 1ab8   	jmpl	r14,writeChar
+1b68 : 04a6        	mr	r6,r10
+1b6a : e800 0004   	ba	read1HexDone
                    badHexDigit:
-1b7c : 8806 ffff   	li	r6,0xFFFF
+1b6e : 8806 ffff   	li	r6,0xFFFF
                    read1HexDone:	
-1b80 : 98fa 0000   	ld	r10,0(r15)
-1b84 : 98fe 0002   	ld	r14,2(r15)
-1b88 : 98fb 0004   	ld	r11,4(r15)
-1b8c : 98fc 0006   	ld	r12,6(r15)
-1b90 : 380f 0008   	addi	r15,8
-1b94 : d00e        	br	r14        # return 1 hex digit
+1b72 : 98fa 0000   	ld	r10,0(r15)
+1b76 : 98fe 0002   	ld	r14,2(r15)
+1b7a : 98fb 0004   	ld	r11,4(r15)
+1b7e : 98fc 0006   	ld	r12,6(r15)
+1b82 : 380f 0008   	addi	r15,8
+1b86 : d00e        	br	r14        # return 1 hex digit
                    read2HexDigits:	globl # uint8_t read2HexDigits(bool echo)
-1b96 : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
-1b9a : a8fa 0000   	st	r10,0(r15)
-1b9e : a8fb 0002   	st	r11,2(r15)
-1ba2 : a8fe 0004   	st	r14,4(r15)
-1ba6 : 880a 0000   	li	r10,0   # digit accumulator
-1baa : 040b        	mr	r11,r0  # echo flag
-1bac : e800 003e   	ba	readonly2digits
+1b88 : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
+1b8c : a8fa 0000   	st	r10,0(r15)
+1b90 : a8fb 0002   	st	r11,2(r15)
+1b94 : a8fe 0004   	st	r14,4(r15)
+1b98 : 880a 0000   	li	r10,0   # digit accumulator
+1b9c : 040b        	mr	r11,r0  # echo flag
+1b9e : e800 003e   	ba	readonly2digits
                    read4HexDigits: globl # uint16_t read4HexDigits(void)
-1bb0 : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
-1bb4 : a8fa 0000   	st	r10,0(r15)
-1bb8 : a8fb 0002   	st	r11,2(r15)
-1bbc : a8fe 0004   	st	r14,4(r15)
-1bc0 : 880a 0000   	li	r10,0   # digit accumulator
-1bc4 : 040b        	mr	r11,r0  # echo flag
-1bc6 : fc0e 1b00   	jmpl	r14,read1HexDigit
-1bca : 6806 ffff   	cmpi	r6,0xFFFF
-1bce : e801 0040   	beq	badHexDigit2
-1bd2 : 5806 000c   	roli	r6,12
-1bd6 : 006a        	or	r10,r6   # first digit
-1bd8 : 04b0        	mr	r0,r11 # echo flag
-1bda : fc0e 1b00   	jmpl	r14,read1HexDigit
-1bde : 6806 ffff   	cmpi	r6,0xFFFF
-1be2 : e801 002c   	beq	badHexDigit2
-1be6 : 5806 0008   	roli	r6,8
-1bea : 006a        	or	r10,r6   # second digit
-1bec : 04b0        	mr	r0,r11 # echo flag
+1ba2 : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
+1ba6 : a8fa 0000   	st	r10,0(r15)
+1baa : a8fb 0002   	st	r11,2(r15)
+1bae : a8fe 0004   	st	r14,4(r15)
+1bb2 : 880a 0000   	li	r10,0   # digit accumulator
+1bb6 : 040b        	mr	r11,r0  # echo flag
+1bb8 : fc0e 1af2   	jmpl	r14,read1HexDigit
+1bbc : 6806 ffff   	cmpi	r6,0xFFFF
+1bc0 : e801 0040   	beq	badHexDigit2
+1bc4 : 5806 000c   	roli	r6,12
+1bc8 : 006a        	or	r10,r6   # first digit
+1bca : 04b0        	mr	r0,r11 # echo flag
+1bcc : fc0e 1af2   	jmpl	r14,read1HexDigit
+1bd0 : 6806 ffff   	cmpi	r6,0xFFFF
+1bd4 : e801 002c   	beq	badHexDigit2
+1bd8 : 5806 0008   	roli	r6,8
+1bdc : 006a        	or	r10,r6   # second digit
+1bde : 04b0        	mr	r0,r11 # echo flag
                    readonly2digits:	
-1bee : fc0e 1b00   	jmpl	r14,read1HexDigit
-1bf2 : 6806 ffff   	cmpi	r6,0xFFFF
-1bf6 : e801 0018   	beq	badHexDigit2
-1bfa : 5806 0004   	roli	r6,4
-1bfe : 006a        	or	r10,r6   # third digit
-1c00 : 04b0        	mr	r0,r11 # echo flag
-1c02 : fc0e 1b00   	jmpl	r14,read1HexDigit
-1c06 : 6806 ffff   	cmpi	r6,0xFFFF
-1c0a : e801 0004   	beq	badHexDigit2
-1c0e : 006a        	or	r10,r6   # fourth digit
-1c10 : 04a6        	mr	r6,r10   # into return reg
+1be0 : fc0e 1af2   	jmpl	r14,read1HexDigit
+1be4 : 6806 ffff   	cmpi	r6,0xFFFF
+1be8 : e801 0018   	beq	badHexDigit2
+1bec : 5806 0004   	roli	r6,4
+1bf0 : 006a        	or	r10,r6   # third digit
+1bf2 : 04b0        	mr	r0,r11 # echo flag
+1bf4 : fc0e 1af2   	jmpl	r14,read1HexDigit
+1bf8 : 6806 ffff   	cmpi	r6,0xFFFF
+1bfc : e801 0004   	beq	badHexDigit2
+1c00 : 006a        	or	r10,r6   # fourth digit
+1c02 : 04a6        	mr	r6,r10   # into return reg
                    badHexDigit2:	
-1c12 : 98fa 0000   	ld	r10,0(r15)
-1c16 : 98fb 0002   	ld	r11,2(r15)
-1c1a : 98fe 0004   	ld	r14,4(r15)
-1c1e : 380f 0008   	addi	r15,8
-1c22 : d00e        	br	r14     # return 2 or 4 hex digits
+1c04 : 98fa 0000   	ld	r10,0(r15)
+1c08 : 98fb 0002   	ld	r11,2(r15)
+1c0c : 98fe 0004   	ld	r14,4(r15)
+1c10 : 380f 0008   	addi	r15,8
+1c14 : d00e        	br	r14     # return 2 or 4 hex digits
                    printhexdigit:	globl # void printhexdigit(uint4_t digit)
-1c24 : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
-1c28 : a8fa 0000   	st	r10,0(r15)
-1c2c : a8fe 0002   	st	r14,2(r15)
-1c30 : 6800 000a   	cmpi	r0,10
-1c34 : e803 0008   	blt	printdigit1
-1c38 : 3800 0037   	addi	r0,55
-1c3c : e800 0004   	ba	printdigit2
+1c16 : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
+1c1a : a8fa 0000   	st	r10,0(r15)
+1c1e : a8fe 0002   	st	r14,2(r15)
+1c22 : 6800 000a   	cmpi	r0,10
+1c26 : e803 0008   	blt	printdigit1
+1c2a : 3800 0037   	addi	r0,55
+1c2e : e800 0004   	ba	printdigit2
                    printdigit1:
-1c40 : 3800 0030   	addi	r0,0x30
+1c32 : 3800 0030   	addi	r0,0x30
                    printdigit2:	
-1c44 : fc0e 1ac6   	jmpl	r14,writeChar
-1c48 : 98fa 0000   	ld	r10,0(r15)
-1c4c : 98fe 0002   	ld	r14,2(r15)
-1c50 : 380f 0008   	addi	r15,8
-1c54 : d00e        	br	r14
+1c36 : fc0e 1ab8   	jmpl	r14,writeChar
+1c3a : 98fa 0000   	ld	r10,0(r15)
+1c3e : 98fe 0002   	ld	r14,2(r15)
+1c42 : 380f 0008   	addi	r15,8
+1c46 : d00e        	br	r14
                    printbyte:  globl # void printword(uint8_t word)
-1c56 : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
-1c5a : a8fa 0000   	st	r10,0(r15)
-1c5e : a8fe 0002   	st	r14,2(r15)
-1c62 : 040a        	mr	r10,r0
-1c64 : 5800 000c   	roli	r0,12
-1c68 : 1800 000f   	andi	r0,0xF
-1c6c : fc0e 1c24   	jmpl	r14,printhexdigit
-1c70 : 04a0        	mr	r0,r10
-1c72 : 1800 000f   	andi	r0,0xF
-1c76 : fc0e 1c24   	jmpl	r14,printhexdigit
-1c7a : 98fa 0000   	ld	r10,0(r15)
-1c7e : 98fe 0002   	ld	r14,2(r15)
-1c82 : 380f 0008   	addi	r15,8
-1c86 : d00e        	br	r14
+1c48 : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
+1c4c : a8fa 0000   	st	r10,0(r15)
+1c50 : a8fe 0002   	st	r14,2(r15)
+1c54 : 040a        	mr	r10,r0
+1c56 : 5800 000c   	roli	r0,12
+1c5a : 1800 000f   	andi	r0,0xF
+1c5e : fc0e 1c16   	jmpl	r14,printhexdigit
+1c62 : 04a0        	mr	r0,r10
+1c64 : 1800 000f   	andi	r0,0xF
+1c68 : fc0e 1c16   	jmpl	r14,printhexdigit
+1c6c : 98fa 0000   	ld	r10,0(r15)
+1c70 : 98fe 0002   	ld	r14,2(r15)
+1c74 : 380f 0008   	addi	r15,8
+1c78 : d00e        	br	r14
                    printword:  globl # void printword(uint16_t word)
-1c88 : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
-1c8c : a8fa 0000   	st	r10,0(r15)
-1c90 : a8fe 0002   	st	r14,2(r15)
-1c94 : 040a        	mr	r10,r0
-1c96 : 5800 0004   	roli	r0,4
+1c7a : 480f 0008   	subi	r15,8       # need 8 bytes on the stack
+1c7e : a8fa 0000   	st	r10,0(r15)
+1c82 : a8fe 0002   	st	r14,2(r15)
+1c86 : 040a        	mr	r10,r0
+1c88 : 5800 0004   	roli	r0,4
+1c8c : 1800 000f   	andi	r0,0xF
+1c90 : fc0e 1c16   	jmpl	r14,printhexdigit
+1c94 : 04a0        	mr	r0,r10
+1c96 : 5800 0008   	roli	r0,8
 1c9a : 1800 000f   	andi	r0,0xF
-1c9e : fc0e 1c24   	jmpl	r14,printhexdigit
+1c9e : fc0e 1c16   	jmpl	r14,printhexdigit
 1ca2 : 04a0        	mr	r0,r10
-1ca4 : 5800 0008   	roli	r0,8
+1ca4 : 5800 000c   	roli	r0,12
 1ca8 : 1800 000f   	andi	r0,0xF
-1cac : fc0e 1c24   	jmpl	r14,printhexdigit
+1cac : fc0e 1c16   	jmpl	r14,printhexdigit
 1cb0 : 04a0        	mr	r0,r10
-1cb2 : 5800 000c   	roli	r0,12
-1cb6 : 1800 000f   	andi	r0,0xF
-1cba : fc0e 1c24   	jmpl	r14,printhexdigit
-1cbe : 04a0        	mr	r0,r10
-1cc0 : 1800 000f   	andi	r0,0xF
-1cc4 : fc0e 1c24   	jmpl	r14,printhexdigit
-1cc8 : 98fa 0000   	ld	r10,0(r15)
-1ccc : 98fe 0002   	ld	r14,2(r15)
-1cd0 : 380f 0008   	addi	r15,8
-1cd4 : d00e        	br	r14
+1cb2 : 1800 000f   	andi	r0,0xF
+1cb6 : fc0e 1c16   	jmpl	r14,printhexdigit
+1cba : 98fa 0000   	ld	r10,0(r15)
+1cbe : 98fe 0002   	ld	r14,2(r15)
+1cc2 : 380f 0008   	addi	r15,8
+1cc6 : d00e        	br	r14
                    enablePerfCounter: globl
-1cd6 : 8800 0003   	li	r0,3
-1cda : 8801 0030   	li	r1,perfCounterIO
-1cde : c810 0000   	out	r0,0(r1)
-1ce2 : d00e        	br	r14
+1cc8 : 8800 0003   	li	r0,3
+1ccc : 8801 0030   	li	r1,perfCounterIO
+1cd0 : c810 0000   	out	r0,0(r1)
+1cd4 : d00e        	br	r14
                    printPerfCounter: globl
-1ce4 : 480f 0004   	subi	r15,4  # ret and r10
-1ce8 : a8fa 0000   	st	r10,0(r15)
-1cec : a8fe 0002   	st	r14,2(r15)
-1cf0 : 8800 0000   	li	r0,0
-1cf4 : 880a 0030   	li	r10,perfCounterIO
-1cf8 : c8a0 0000   	out	r0,0(r10) # disable perf counter
-1cfc : b8a0 0000   	in	r0,0(r10) # read a byte
-1d00 : fc0e 1c56   	jmpl	r14,printbyte
-1d04 : b8a0 0001   	in	r0,1(r10) # read a byte
-1d08 : fc0e 1c56   	jmpl	r14,printbyte
-1d0c : b8a0 0002   	in	r0,2(r10) # read a byte
-1d10 : fc0e 1c56   	jmpl	r14,printbyte
-1d14 : b8a0 0003   	in	r0,3(r10) # read a byte
-1d18 : fc0e 1c56   	jmpl	r14,printbyte
-1d1c : b8a0 0004   	in	r0,4(r10) # read a byte
-1d20 : fc0e 1c56   	jmpl	r14,printbyte
-1d24 : b8a0 0005   	in	r0,5(r10) # read a byte
-1d28 : fc0e 1c56   	jmpl	r14,printbyte
-1d2c : b8a0 0006   	in	r0,6(r10) # read a byte
-1d30 : fc0e 1c56   	jmpl	r14,printbyte
-1d34 : b8a0 0007   	in	r0,7(r10) # read a byte
-1d38 : fc0e 1c56   	jmpl	r14,printbyte
-1d3c : 8800 000d   	li	r0,13
-1d40 : fc0e 1ac6   	jmpl	r14,writeChar
-1d44 : 8800 000a   	li	r0,10
-1d48 : fc0e 1ac6   	jmpl	r14,writeChar
-1d4c : 98fa 0000   	ld	r10,0(r15)
-1d50 : 98fe 0002   	ld	r14,2(r15)
-1d54 : 380f 0004   	addi	r15,4
-1d58 : d00e        	br	r14
+1cd6 : 480f 0004   	subi	r15,4  # ret and r10
+1cda : a8fa 0000   	st	r10,0(r15)
+1cde : a8fe 0002   	st	r14,2(r15)
+1ce2 : 8800 0000   	li	r0,0
+1ce6 : 880a 0030   	li	r10,perfCounterIO
+1cea : c8a0 0000   	out	r0,0(r10) # disable perf counter
+1cee : b8a0 0000   	in	r0,0(r10) # read a byte
+1cf2 : fc0e 1c48   	jmpl	r14,printbyte
+1cf6 : b8a0 0001   	in	r0,1(r10) # read a byte
+1cfa : fc0e 1c48   	jmpl	r14,printbyte
+1cfe : b8a0 0002   	in	r0,2(r10) # read a byte
+1d02 : fc0e 1c48   	jmpl	r14,printbyte
+1d06 : b8a0 0003   	in	r0,3(r10) # read a byte
+1d0a : fc0e 1c48   	jmpl	r14,printbyte
+1d0e : b8a0 0004   	in	r0,4(r10) # read a byte
+1d12 : fc0e 1c48   	jmpl	r14,printbyte
+1d16 : b8a0 0005   	in	r0,5(r10) # read a byte
+1d1a : fc0e 1c48   	jmpl	r14,printbyte
+1d1e : b8a0 0006   	in	r0,6(r10) # read a byte
+1d22 : fc0e 1c48   	jmpl	r14,printbyte
+1d26 : b8a0 0007   	in	r0,7(r10) # read a byte
+1d2a : fc0e 1c48   	jmpl	r14,printbyte
+1d2e : 8800 000d   	li	r0,13
+1d32 : fc0e 1ab8   	jmpl	r14,writeChar
+1d36 : 8800 000a   	li	r0,10
+1d3a : fc0e 1ab8   	jmpl	r14,writeChar
+1d3e : 98fa 0000   	ld	r10,0(r15)
+1d42 : 98fe 0002   	ld	r14,2(r15)
+1d46 : 380f 0004   	addi	r15,4
+1d4a : d00e        	br	r14
                    loader: globl
-1d5a : 880a 0001   	li	r10,cpuidIO
-1d5e : b8ab 0000   	in	r11,0(r10)
-1d62 : 680b 0001   	cmpi	r11,1
-1d66 : e801 0014   	beq	loader_cpu1
-1d6a : 880a 0028   	li	r10,dropboxIO
-1d6e : 880b 0000   	li	r11,0
+1d4c : 880a 0001   	li	r10,cpuidIO
+1d50 : b8ab 0000   	in	r11,0(r10)
+1d54 : 680b 0001   	cmpi	r11,1
+1d58 : e801 0014   	beq	loader_cpu1
+1d5c : 880a 0028   	li	r10,dropboxIO
+1d60 : 880b 0000   	li	r11,0
                    cpu2_dead:
-1d72 : c8ab 0000   	out	r11,0(r10)
-1d76 : 380b 0001   	addi	r11,1
-1d7a : e800 fff4   	ba	cpu2_dead
+1d64 : c8ab 0000   	out	r11,0(r10)
+1d68 : 380b 0001   	addi	r11,1
+1d6c : e800 fff4   	ba	cpu2_dead
                    loader_cpu1:	
-1d7e : 8800 0001   	li	r0,1
-1d82 : 8801 0030   	li	r1,0x30
-1d86 : c810 0000   	out	r0,0(r1)   # enable perf counter
-1d8a : 8800 1940   	li	r0,versionString
-1d8e : fc0e 1a92   	jmpl	r14,print
-1d92 : 8800 1967   	li	r0,cpuidString
-1d96 : fc0e 1a92   	jmpl	r14,print
-1d9a : 880a 0001   	li	r10,cpuidIO
-1d9e : b8a0 0000   	in	r0,0(r10)
-1da2 : fc0e 1c56   	jmpl	r14,printbyte
-1da6 : 8800 1971   	li	r0,procverString
-1daa : fc0e 1a92   	jmpl	r14,print
-1dae : 880a 0000   	li	r10,procverIO
-1db2 : b8a0 0000   	in	r0,0(r10)
-1db6 : fc0e 1c56   	jmpl	r14,printbyte
-1dba : 8800 197d   	li	r0,qforhelpString
-1dbe : fc0e 1a92   	jmpl	r14,print
+1d70 : 8800 0001   	li	r0,1
+1d74 : 8801 0030   	li	r1,0x30
+1d78 : c810 0000   	out	r0,0(r1)   # enable perf counter
+1d7c : 8800 1940   	li	r0,versionString
+1d80 : fc0e 1a84   	jmpl	r14,print
+1d84 : 8800 1967   	li	r0,cpuidString
+1d88 : fc0e 1a84   	jmpl	r14,print
+1d8c : 880a 0001   	li	r10,cpuidIO
+1d90 : b8a0 0000   	in	r0,0(r10)
+1d94 : fc0e 1c48   	jmpl	r14,printbyte
+1d98 : 8800 1971   	li	r0,procverString
+1d9c : fc0e 1a84   	jmpl	r14,print
+1da0 : 880a 0000   	li	r10,procverIO
+1da4 : b8a0 0000   	in	r0,0(r10)
+1da8 : fc0e 1c48   	jmpl	r14,printbyte
+1dac : 8800 197d   	li	r0,qforhelpString
+1db0 : fc0e 1a84   	jmpl	r14,print
                    commandLoop:	
-1dc2 : 8800 1991   	li	r0,prompt
-1dc6 : fc0e 1a92   	jmpl	r14,print
+1db4 : 8800 1991   	li	r0,prompt
+1db8 : fc0e 1a84   	jmpl	r14,print
                    readCommand:	
-1dca : 8800 0001   	li	r0,1
-1dce : fc0e 1adc   	jmpl	r14,readChar # get a command
-1dd2 : 6c06 0056   	cmpbi	r6,0x56   # 'V'
-1dd6 : e802 000c   	bne	checkQuestionMark
-1dda : 8800 0056   	li	r0,0x56
-1dde : fc0e 1ac6   	jmpl	r14,writeChar
-1de2 : e800 ff74   	ba	loader
+1dbc : 8800 0001   	li	r0,1
+1dc0 : fc0e 1ace   	jmpl	r14,readChar # get a command
+1dc4 : 0467        	mr	r7,r6
+1dc6 : 0460        	mr	r0,r6
+1dc8 : fc0e 1ab8   	jmpl	r14,writeChar
+1dcc : 0476        	mr	r6,r7
+1dce : 6c06 0056   	cmpbi	r6,0x56   # 'V'
+1dd2 : e802 000c   	bne	checkQuestionMark
+1dd6 : 8800 0056   	li	r0,0x56
+1dda : fc0e 1ab8   	jmpl	r14,writeChar
+1dde : e800 ff6a   	ba	loader
                    checkQuestionMark:	
-1de6 : 6c06 003f   	cmpbi	r6,0x3f   # '?'
-1dea : e801 004c   	beq	printHelpMessage
-1dee : 6c06 0044   	cmpbi	r6,0x44   # 'D'
-1df2 : e801 0088   	beq	displayMemory
-1df6 : 6c06 0050   	cmpbi	r6,0x50   # 'P'
-1dfa : e801 0110   	beq	displayPerfCounterCmd
-1dfe : 6c06 004c   	cmpbi	r6,0x4C   # 'L'
-1e02 : e801 0114   	beq	loadSrecords
-1e06 : 6806 004a   	cmpi	r6,0x4A   # 'J'
-1e0a : e801 01e0   	beq	jumpEntryPoint
-1e0e : 6806 0032   	cmpi	r6,0x32   # '2'
-1e12 : e801 0050   	beq	readDropbox2
-1e16 : 6806 0030   	cmpi	r6,0x30   # '0'
-1e1a : e801 0028   	beq	writeW1A00
-1e1e : 6806 0031   	cmpi	r6,0x31   # '1'
-1e22 : e801 0030   	beq	writeW1A01
-1e26 : 6c06 000d   	cmpbi	r6,13     # carriage return
-1e2a : e801 ff94   	beq	commandLoop
-1e2e : 6c06 000a   	cmpbi	r6,10     # newline
-1e32 : e801 ff8c   	beq	commandLoop
-1e36 : e800 ff90   	ba	readCommand
+1de2 : 6c06 003f   	cmpbi	r6,0x3f   # '?'
+1de6 : e801 0044   	beq	printHelpMessage
+1dea : 6c06 0044   	cmpbi	r6,0x44   # 'D'
+1dee : e801 0074   	beq	displayMemory
+1df2 : 6c06 0050   	cmpbi	r6,0x50   # 'P'
+1df6 : e801 00fc   	beq	displayPerfCounterCmd
+1dfa : 6c06 004c   	cmpbi	r6,0x4C   # 'L'
+1dfe : e801 0100   	beq	loadSrecords
+1e02 : 6806 004a   	cmpi	r6,0x4A   # 'J'
+1e06 : e801 01cc   	beq	jumpEntryPoint
+1e0a : 6806 0032   	cmpi	r6,0x32   # '2'
+1e0e : e801 003c   	beq	readDropbox2
+1e12 : 6806 0030   	cmpi	r6,0x30   # 'A'
+1e16 : e801 0020   	beq	writeWA
+1e1a : 6c06 000d   	cmpbi	r6,13     # carriage return
+1e1e : e801 ff92   	beq	commandLoop
+1e22 : 6c06 000a   	cmpbi	r6,10     # newline
+1e26 : e801 ff8a   	beq	commandLoop
+1e2a : e800 ff8e   	ba	readCommand
                    printHelpMessage:
-1e3a : 8800 1996   	li	r0,helpString
-1e3e : fc0e 1a92   	jmpl	r14,print
-1e42 : e800 ff7c   	ba	commandLoop
-                   writeW1A00:
-1e46 : 880a 0056   	li	r10,w1a0out
-1e4a : 8801 0000   	li	r1,0
-1e4e : c8a1 0000   	out	r1,0(r10)
-1e52 : e800 ff6c   	ba	commandLoop
-                   writeW1A01:
-1e56 : 880a 0056   	li	r10,w1a0out
-1e5a : 8801 0001   	li	r1,1
-1e5e : c8a1 0000   	out	r1,0(r10)
-1e62 : e800 ff5c   	ba	commandLoop
+1e2e : 8800 1996   	li	r0,helpString
+1e32 : fc0e 1a84   	jmpl	r14,print
+1e36 : e800 ff7a   	ba	commandLoop
+                   writeWA:
+1e3a : 8800 0001   	li	r0,1
+1e3e : fc0e 1ace   	jmpl	r14,readChar
+1e42 : 880a 0056   	li	r10,w1a0out
+1e46 : c8a6 0000   	out	r6,0(r10)
+1e4a : e800 ff66   	ba	commandLoop
                    readDropbox2:
-1e66 : 8800 1a81   	li	r0,dropbox2String
-1e6a : fc0e 1a92   	jmpl	r14,print
-1e6e : 880a 0028   	li	r10,dropboxIO
-1e72 : b8a0 0000   	in	r0,0(r10)
-1e76 : fc0e 1c56   	jmpl	r14,printbyte
-1e7a : e800 ff44   	ba	commandLoop
+1e4e : 8800 1a72   	li	r0,dropbox2String
+1e52 : fc0e 1a84   	jmpl	r14,print
+1e56 : 880a 0028   	li	r10,dropboxIO
+1e5a : b8a0 0000   	in	r0,0(r10)
+1e5e : fc0e 1c48   	jmpl	r14,printbyte
+1e62 : e800 ff4e   	ba	commandLoop
                    displayMemory:
-1e7e : 8800 0044   	li	r0,0x44  # 'D'
-1e82 : fc0e 1ac6   	jmpl	r14,writeChar
-1e86 : 8800 0020   	li	r0,0x20  # ' '
-1e8a : fc0e 1ac6   	jmpl	r14,writeChar
-1e8e : 8800 0001   	li	r0,1 # echo flag
-1e92 : fc0e 1bb0   	jmpl	r14,read4HexDigits
-1e96 : 6806 ffff   	cmpi	r6,0xFFFF
-1e9a : e801 ff24   	beq	commandLoop
-1e9e : 046a        	mr	r10,r6
-1ea0 : 8800 000d   	li	r0,0x0d  # CR
-1ea4 : fc0e 1ac6   	jmpl	r14,writeChar
-1ea8 : 8800 000a   	li	r0,0x0a  # NL
-1eac : fc0e 1ac6   	jmpl	r14,writeChar
-1eb0 : 880b 0010   	li	r11,16  # line count
+1e66 : 8800 0044   	li	r0,0x44  # 'D'
+1e6a : fc0e 1ab8   	jmpl	r14,writeChar
+1e6e : 8800 0020   	li	r0,0x20  # ' '
+1e72 : fc0e 1ab8   	jmpl	r14,writeChar
+1e76 : 8800 0001   	li	r0,1 # echo flag
+1e7a : fc0e 1ba2   	jmpl	r14,read4HexDigits
+1e7e : 6806 ffff   	cmpi	r6,0xFFFF
+1e82 : e801 ff2e   	beq	commandLoop
+1e86 : 046a        	mr	r10,r6
+1e88 : 8800 000d   	li	r0,0x0d  # CR
+1e8c : fc0e 1ab8   	jmpl	r14,writeChar
+1e90 : 8800 000a   	li	r0,0x0a  # NL
+1e94 : fc0e 1ab8   	jmpl	r14,writeChar
+1e98 : 880b 0010   	li	r11,16  # line count
                    displayMemoryNextLine:	
-1eb4 : 880c 0008   	li	r12,8   # word count
-1eb8 : 04a0        	mr	r0,r10
-1eba : fc0e 1c88   	jmpl	r14,printword	# display address
-1ebe : 8800 0020   	li	r0,32
-1ec2 : fc0e 1ac6   	jmpl	r14,writeChar
-1ec6 : 8800 003a   	li	r0,0x3A
-1eca : fc0e 1ac6   	jmpl	r14,writeChar
-1ece : 8800 0020   	li	r0,32
-1ed2 : fc0e 1ac6   	jmpl	r14,writeChar
+1e9c : 880c 0008   	li	r12,8   # word count
+1ea0 : 04a0        	mr	r0,r10
+1ea2 : fc0e 1c7a   	jmpl	r14,printword	# display address
+1ea6 : 8800 0020   	li	r0,32
+1eaa : fc0e 1ab8   	jmpl	r14,writeChar
+1eae : 8800 003a   	li	r0,0x3A
+1eb2 : fc0e 1ab8   	jmpl	r14,writeChar
+1eb6 : 8800 0020   	li	r0,32
+1eba : fc0e 1ab8   	jmpl	r14,writeChar
                    displayMemoryNextWord:	
-1ed6 : 98a0 0000   	ld	r0,0(r10)
-1eda : 380a 0002   	addi	r10,2
-1ede : fc0e 1c88   	jmpl	r14,printword
-1ee2 : 8800 0020   	li	r0,32
-1ee6 : fc0e 1ac6   	jmpl	r14,writeChar
-1eea : 480c 0001   	subi	r12,1
-1eee : e802 ffe4   	bne	displayMemoryNextWord
-1ef2 : 8800 000d   	li	r0,13
-1ef6 : fc0e 1ac6   	jmpl	r14,writeChar
-1efa : 8800 000a   	li	r0,10
-1efe : fc0e 1ac6   	jmpl	r14,writeChar
-1f02 : 480b 0001   	subi	r11,1
-1f06 : e802 ffaa   	bne	displayMemoryNextLine
-1f0a : e800 feb4   	ba	commandLoop
+1ebe : 98a0 0000   	ld	r0,0(r10)
+1ec2 : 380a 0002   	addi	r10,2
+1ec6 : fc0e 1c7a   	jmpl	r14,printword
+1eca : 8800 0020   	li	r0,32
+1ece : fc0e 1ab8   	jmpl	r14,writeChar
+1ed2 : 480c 0001   	subi	r12,1
+1ed6 : e802 ffe4   	bne	displayMemoryNextWord
+1eda : 8800 000d   	li	r0,13
+1ede : fc0e 1ab8   	jmpl	r14,writeChar
+1ee2 : 8800 000a   	li	r0,10
+1ee6 : fc0e 1ab8   	jmpl	r14,writeChar
+1eea : 480b 0001   	subi	r11,1
+1eee : e802 ffaa   	bne	displayMemoryNextLine
+1ef2 : e800 febe   	ba	commandLoop
                    displayPerfCounterCmd:
-1f0e : fc0e 1ce4   	jmpl	r14,printPerfCounter
-1f12 : fc0e 1cd6   	jmpl	r14,enablePerfCounter
-1f16 : e800 fea8   	ba	commandLoop
+1ef6 : fc0e 1cd6   	jmpl	r14,printPerfCounter
+1efa : fc0e 1cc8   	jmpl	r14,enablePerfCounter
+1efe : e800 feb2   	ba	commandLoop
                    loadSrecords:
-1f1a : 0460        	mr	r0,r6
-1f1c : fc0e 1ac6   	jmpl	r14,writeChar
-1f20 : 8800 000d   	li	r0,13
-1f24 : fc0e 1ac6   	jmpl	r14,writeChar
-1f28 : 8800 000a   	li	r0,10
-1f2c : fc0e 1ac6   	jmpl	r14,writeChar
-1f30 : e800 0010   	ba	getNextSRecord
+1f02 : 0460        	mr	r0,r6
+1f04 : fc0e 1ab8   	jmpl	r14,writeChar
+1f08 : 8800 000d   	li	r0,13
+1f0c : fc0e 1ab8   	jmpl	r14,writeChar
+1f10 : 8800 000a   	li	r0,10
+1f14 : fc0e 1ab8   	jmpl	r14,writeChar
+1f18 : e800 0010   	ba	getNextSRecord
                    displaySRError:
-1f34 : 8800 0021   	li	r0,0x21   # '!'
-1f38 : e800 0004   	ba	displaySRStatus
+1f1c : 8800 0021   	li	r0,0x21   # '!'
+1f20 : e800 0004   	ba	displaySRStatus
                    displaySROK:
-1f3c : 8800 002e   	li	r0,0x2E   # '.'
+1f24 : 8800 002e   	li	r0,0x2E   # '.'
                    displaySRStatus:
-1f40 : fc0e 1ac6   	jmpl	r14,writeChar
+1f28 : fc0e 1ab8   	jmpl	r14,writeChar
                    getNextSRecord:	
-1f44 : fc0e 1adc   	jmpl	r14,readChar
-1f48 : 6c06 0053   	cmpbi	r6,0x53    # 'S'
-1f4c : e802 fff4   	bne	getNextSRecord
-1f50 : fc0e 1adc   	jmpl	r14,readChar
-1f54 : 6c06 0039   	cmpbi	r6,0x39    # '9' : S9 = end S-record file
-1f58 : e801 005a   	beq	getSREntryPt
-1f5c : 6c06 0031   	cmpbi	r6,0x31    # '1' : S1 = S-record entry
-1f60 : e802 ffe0   	bne	getNextSRecord
+1f2c : fc0e 1ace   	jmpl	r14,readChar
+1f30 : 6c06 0053   	cmpbi	r6,0x53    # 'S'
+1f34 : e802 fff4   	bne	getNextSRecord
+1f38 : fc0e 1ace   	jmpl	r14,readChar
+1f3c : 6c06 0039   	cmpbi	r6,0x39    # '9' : S9 = end S-record file
+1f40 : e801 005a   	beq	getSREntryPt
+1f44 : 6c06 0031   	cmpbi	r6,0x31    # '1' : S1 = S-record entry
+1f48 : e802 ffe0   	bne	getNextSRecord
                    getS1Length:
-1f64 : 8800 0000   	li	r0,0                # echo flag
-1f68 : fc0e 1b96   	jmpl	r14,read2HexDigits  # read length (in words)
-1f6c : 6806 ffff   	cmpi	r6,0xFFFF
-1f70 : e801 ffc0   	beq	displaySRError
-1f74 : 046a        	mr	r10,r6              # loop counter for words
-1f76 : 8800 0000   	li	r0,0                # echo flag
-1f7a : fc0e 1bb0   	jmpl	r14,read4HexDigits
-1f7e : 6806 ffff   	cmpi	r6,0xFFFF
-1f82 : e801 ffae   	beq	displaySRError
-1f86 : 046b        	mr	r11,r6              # address counter
-1f88 : 04bc        	mr	r12,r11             # checksum (includes address field)
+1f4c : 8800 0000   	li	r0,0                # echo flag
+1f50 : fc0e 1b88   	jmpl	r14,read2HexDigits  # read length (in words)
+1f54 : 6806 ffff   	cmpi	r6,0xFFFF
+1f58 : e801 ffc0   	beq	displaySRError
+1f5c : 046a        	mr	r10,r6              # loop counter for words
+1f5e : 8800 0000   	li	r0,0                # echo flag
+1f62 : fc0e 1ba2   	jmpl	r14,read4HexDigits
+1f66 : 6806 ffff   	cmpi	r6,0xFFFF
+1f6a : e801 ffae   	beq	displaySRError
+1f6e : 046b        	mr	r11,r6              # address counter
+1f70 : 04bc        	mr	r12,r11             # checksum (includes address field)
                    getNextSRByte:
-1f8a : 8800 0000   	li	r0,0                # echo flag
-1f8e : fc0e 1bb0   	jmpl	r14,read4HexDigits  # read next unit of data
-1f92 : a8b6 0000   	st	r6,0(r11)
-1f96 : 306c        	add	r12,r6   # add to checksum
-1f98 : 380b 0002   	addi	r11,2    # increment address counter
-1f9c : 480a 0001   	subi	r10,1    # decrement word counter
-1fa0 : e802 ffe6   	bne	getNextSRByte
-1fa4 : 8800 0000   	li	r0,0 # echo flag
-1fa8 : fc0e 1bb0   	jmpl	r14,read4HexDigits  # read checksum
-1fac : 60c6        	cmp	r6,r12
-1fae : e802 ff82   	bne	displaySRError
-1fb2 : e800 ff86   	ba	displaySROK
+1f72 : 8800 0000   	li	r0,0                # echo flag
+1f76 : fc0e 1ba2   	jmpl	r14,read4HexDigits  # read next unit of data
+1f7a : a8b6 0000   	st	r6,0(r11)
+1f7e : 306c        	add	r12,r6   # add to checksum
+1f80 : 380b 0002   	addi	r11,2    # increment address counter
+1f84 : 480a 0001   	subi	r10,1    # decrement word counter
+1f88 : e802 ffe6   	bne	getNextSRByte
+1f8c : 8800 0000   	li	r0,0 # echo flag
+1f90 : fc0e 1ba2   	jmpl	r14,read4HexDigits  # read checksum
+1f94 : 60c6        	cmp	r6,r12
+1f96 : e802 ff82   	bne	displaySRError
+1f9a : e800 ff86   	ba	displaySROK
                    getSREntryPt:
-1fb6 : 8800 0000   	li	r0,0                # echo flag
-1fba : fc0e 1bb0   	jmpl	r14,read4HexDigits  # read entry point
-1fbe : 046c        	mr	r12,r6              # save entry point
-1fc0 : 8800 0000   	li	r0,0                # echo flag
-1fc4 : fc0e 1bb0   	jmpl	r14,read4HexDigits  # read entry point checksum
-1fc8 : 606c        	cmp	r12,r6
-1fca : e802 0014   	bne	badS9Entry
-1fce : 880b 1a90   	li	r11,entryPoint
-1fd2 : a8bc 0000   	st	r12,0(r11)
-1fd6 : 8800 002e   	li	r0,0x2E   # '.'
-1fda : fc0e 1ac6   	jmpl	r14,writeChar
-1fde : e800 fde0   	ba	commandLoop
+1f9e : 8800 0000   	li	r0,0                # echo flag
+1fa2 : fc0e 1ba2   	jmpl	r14,read4HexDigits  # read entry point
+1fa6 : 046c        	mr	r12,r6              # save entry point
+1fa8 : 8800 0000   	li	r0,0                # echo flag
+1fac : fc0e 1ba2   	jmpl	r14,read4HexDigits  # read entry point checksum
+1fb0 : 606c        	cmp	r12,r6
+1fb2 : e802 0014   	bne	badS9Entry
+1fb6 : 880b 1a81   	li	r11,entryPoint
+1fba : a8bc 0000   	st	r12,0(r11)
+1fbe : 8800 002e   	li	r0,0x2E   # '.'
+1fc2 : fc0e 1ab8   	jmpl	r14,writeChar
+1fc6 : e800 fdea   	ba	commandLoop
                    badS9Entry:	
-1fe2 : 8800 0021   	li	r0,0x21   # '!'
-1fe6 : fc0e 1ac6   	jmpl	r14,writeChar
-1fea : e800 fdd4   	ba	commandLoop
+1fca : 8800 0021   	li	r0,0x21   # '!'
+1fce : fc0e 1ab8   	jmpl	r14,writeChar
+1fd2 : e800 fdde   	ba	commandLoop
                    jumpEntryPoint:
-1fee : 880a 1a90   	li	r10,entryPoint
-1ff2 : 98ab 0000   	ld	r11,0(r10)
-1ff6 : 680b ffff   	cmpi	r11,0xFFFF
-1ffa : e801 fdc4   	beq	commandLoop
-1ffe : d00b        	br	r11
+1fd6 : 880a 1a81   	li	r10,entryPoint
+1fda : 98ab 0000   	ld	r11,0(r10)
+1fde : 680b ffff   	cmpi	r11,0xFFFF
+1fe2 : e801 fdce   	beq	commandLoop
+1fe6 : d00b        	br	r11

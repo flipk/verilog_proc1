@@ -4,7 +4,7 @@ module Top
   ( input  CLKIN,
     input  RX,
     output TX,
-    output pin_oW1A0
+    output [7:0] pin_oW1A
     );
 
    wire          CLKIN_IBUF;
@@ -113,8 +113,18 @@ module Top
        .inbus_data           (INBUS_DATA_rs232),
        .inbus_re             (INBUS_RE) );
 
+   wire [7:0] sevensegvalue;
+
+   sevensegment seg7
+     ( .clk(CLKPROC1),
+       .blank(sevensegvalue[4]),
+       .value(sevensegvalue[3:0]),
+       .segments({pin_oW1A[7:5],pin_oW1A[3:0]}) );
+
+   assign pin_oW1A[4] = 0;
+
    outputPin
-     #( .PIN_WIDTH(1), 
+     #( .PIN_WIDTH(5), 
         .DEVADDR(OUTPUT_PIN_W1A0_DEVADDR) )
    pinW1A0
      ( .clk(CLKPROC1),
@@ -122,8 +132,8 @@ module Top
        .OUTBUS_ADDR(OUTBUS_ADDR),
        .OUTBUS_DATA(OUTBUS_DATA),
        .OUTBUS_WE(OUTBUS_WE),
-       .OUTPUT_PIN(pin_oW1A0) );
-     
+       .OUTPUT_PIN(sevensegvalue) );
+
 `ifdef SECOND_PROC
 
    wire [7:0]  OUTBUS_ADDR2;

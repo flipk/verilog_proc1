@@ -31,8 +31,8 @@ module clock_generator
    DCM_SP
      #( .CLK_FEEDBACK("NONE"),
         .CLKDV_DIVIDE(2.0),
-        .CLKFX_DIVIDE(4), 
-        .CLKFX_MULTIPLY(8),
+        .CLKFX_DIVIDE(16), 
+        .CLKFX_MULTIPLY(12),
         .CLKIN_DIVIDE_BY_2("FALSE"), 
         .CLKIN_PERIOD(31.250), //   (1 / 32 * 1000)
         .CLKOUT_PHASE_SHIFT("NONE"), 

@@ -28,14 +28,14 @@ NET "CLKIN" CLOCK_DEDICATED_ROUTE = FALSE;
 PIN "clk1/DCM_RS232.CLKIN" CLOCK_DEDICATED_ROUTE = FALSE;
 
 # Wing1 Column A
-NET "pin_oW1A0"  LOC = "P18" ; # A0
-#NET "W1A<1>"  LOC = "P23" ; # A1
-#NET "W1A<2>"  LOC = "P26" ; # A2
-#NET "W1A<3>"  LOC = "P33" ; # A3
-#NET "W1A<4>"  LOC = "P35" ; # A4
-#NET "W1A<5>"  LOC = "P40" ; # A5
-#NET "W1A<6>"  LOC = "P53" ; # A6
-#NET "W1A<7>"  LOC = "P57" ; # A7
+NET "pin_oW1A<0>"  LOC = "P18" ; # A0
+NET "pin_oW1A<1>"  LOC = "P23" ; # A1
+NET "pin_oW1A<2>"  LOC = "P26" ; # A2
+NET "pin_oW1A<3>"  LOC = "P33" ; # A3
+NET "pin_oW1A<4>"  LOC = "P35" ; # A4
+NET "pin_oW1A<5>"  LOC = "P40" ; # A5
+NET "pin_oW1A<6>"  LOC = "P53" ; # A6
+NET "pin_oW1A<7>"  LOC = "P57" ; # A7
 #NET "W1A<8>"  LOC = "P60" ; # A8
 #NET "W1A<9>"  LOC = "P62" ; # A9
 #NET "W1A<10>" LOC = "P65" ; # A10

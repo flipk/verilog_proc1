@@ -7,6 +7,15 @@ module sevensegment
    input            blank;
    output reg [6:0] segments;
 
+   // segments[6:0] are wired as such:
+   //
+   //         |-4--|
+   //        0|    |5
+   //         |-1--|
+   //        2|    |6
+   //         |-3--|
+   //
+   
    always @(posedge clk) begin
       if (blank)
         segments <= 7'd0;
